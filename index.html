@@ -21,6 +21,14 @@
         .map-section { flex: 1.2; background: #e2e8f0; position: relative; overflow: hidden; display: flex; justify-content: center; align-items: center; }
         .map-iframe { width: 100%; height: 100%; border: none; filter: saturate(1.1) contrast(1.05); }
         
+        /* 지도 위에 겹쳐서 전체 노선 마커를 보여주는 오버레이 레이어 */
+        .map-overlay-markers { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; }
+        .custom-pin { position: absolute; transform: translate(-50%, -100%); pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; align-items: center; transition: transform 0.2s; }
+        .custom-pin:hover { transform: translate(-50%, -100%) scale(1.15); z-index: 20; }
+        .pin-number { background: #FF5A36; color: white; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3); border: 2px solid white; }
+        .pin-label { background: rgba(15, 23, 42, 0.85); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 600; white-space: nowrap; margin-top: 2px; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
+        .custom-pin.active .pin-number { background: #0f172a; border-color: #FF5A36; transform: scale(1.2); }
+        
         /* 장소 카드 사이드바 */
         .sidebar { width: 420px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 50; box-shadow: -4px 0 20px rgba(0,0,0,0.05); }
         .sidebar-header { padding: 18px; border-bottom: 1px solid #f1f5f9; background: #fff; }
@@ -62,9 +70,10 @@
     </header>
 
     <div class="main-container">
-        <!-- 첫 접속 시 후쿠오카~기타큐슈 전체 지역이 넓게 보이도록 줌(z=9) 설정 -->
+        <!-- 지도 영역 및 전체 마커 오버레이 -->
         <div class="map-section">
             <iframe id="mapFrame" class="map-iframe" src="https://maps.google.com/maps?q=Kitakyushu+Fukuoka&t=m&z=9&output=embed"></iframe>
+            <div class="map-overlay-markers" id="mapMarkers"></div>
         </div>
 
         <!-- 사이드바 카드 리스트 -->
@@ -79,12 +88,87 @@
 
     <script>
         const travelData = [
-            { step: 1, name: "후쿠오카 공항", query: "Fukuoka Airport", tag: "입국", desc: "여행의 시작점! 공항에서 지하철 타고 하카타로 빠르게 이동.", food: "-", hotel: "-" },
-            { step: 2, name: "하카타", query: "Hakata Station Fukuoka", tag: "숙소/맛집", desc: "첫날 숙소 체크인 및 모츠나베 로컬 맛집 탐방.", food: "하카타 모츠나베 오오야마", hotel: "THE BLOSSOM HAKATA" },
-            { step: 3, name: "구로사키", query: "Kurosaki Station Kitakyushu", tag: "경유/로컬", desc: "기타큐슈 깊숙한 로컬 감성을 느낄 수 있는 환승 거점.", food: "구로사키 야키토리 거리", hotel: "-" },
-            { step: 4, name: "히가시나카마역", query: "Higashinakama Station", tag: "베이스캠프", desc: "이번 일정의 핵심 거점! 조래블이 머문 아늑한 숙소 위치.", food: "역 앞 수제 돈카츠 전문점", hotel: "기타큐슈 비즈니스 스테이" },
-            { step: 5, name: "모지코역", query: "Mojiko Station", tag: "관광/명소", desc: "레트로한 건축물과 바닷가 풍경이 예술인 낭만 항구 도시.", food: "모지코 명물 야끼카레 (베어후르츠)", hotel: "-" },
-            { step: 6, name: "시모노세키", query: "Shimonoseki Station", tag: "맛집/시장", desc: "간몬 해협 건너서 즐기는 싱싱한 복어(후쿠) 요리와 가라토 시장.", food: "가라토 시장 초밥 세트", hotel: "-" },
-            { step: 7, name: "고쿠라", query: "Kokura Station Kitakyushu", tag: "쇼핑/성", desc: "고쿠라 성 산책 및 대형 쇼핑몰 리버워크 탐방.", food: "시로야 베이커리 (연유빵)", hotel: "-" },
-            { step: 8, name: "히가시나카마역", query: "Higashinakama Station", tag: "휴식", desc: "일정 중반 재충전을 위해 다시 들른 베이스캠프.", food: "로컬 라멘 맛집", hotel: "기타큐슈 비즈니스 스테이" },
-            { step: 9, name: "고노세
+            { step: 1, name: "후쿠오카 공항", query: "Fukuoka Airport", top: "78%", left: "18%", tag: "입국", desc: "여행의 시작점! 공항에서 지하철 타고 하카타로 빠르게 이동.", food: "-", hotel: "-" },
+            { step: 2, name: "하카타", query: "Hakata Station Fukuoka", top: "72%", left: "22%", tag: "숙소/맛집", desc: "첫날 숙소 체크인 및 모츠나베 로컬 맛집 탐방.", food: "하카타 모츠나베 오오야마", hotel: "THE BLOSSOM HAKATA" },
+            { step: 3, name: "구로사키", query: "Kurosaki Station Kitakyushu", top: "35%", left: "48%", tag: "경유/로컬", desc: "기타큐슈 깊숙한 로컬 감성을 느낄 수 있는 환승 거점.", food: "구로사키 야키토리 거리", hotel: "-" },
+            { step: 4, name: "히가시나카마역", query: "Higashinakama Station", top: "40%", left: "52%", tag: "베이스캠프", desc: "이번 일정의 핵심 거점! 조래블이 머문 아늑한 숙소 위치.", food: "역 앞 수제 돈카츠 전문점", hotel: "기타큐슈 비즈니스 스테이" },
+            { step: 5, name: "모지코역", query: "Mojiko Station", top: "25%", left: "68%", tag: "관광/명소", desc: "레트로한 건축물과 바닷가 풍경이 예술인 낭만 항구 도시.", food: "모지코 명물 야끼카레 (베어후르츠)", hotel: "-" },
+            { step: 6, name: "시모노세키", query: "Shimonoseki Station", top: "20%", left: "65%", tag: "맛집/시장", desc: "간몬 해협 건너서 즐기는 싱싱한 복어(후쿠) 요리와 가라토 시장.", food: "가라토 시장 초밥 세트", hotel: "-" },
+            { step: 7, name: "고쿠라", query: "Kokura Station Kitakyushu", top: "28%", left: "62%", tag: "쇼핑/성", desc: "고쿠라 성 산책 및 대형 쇼핑몰 리버워크 탐방.", food: "시로야 베이커리 (연유빵)", hotel: "-" },
+            { step: 8, name: "히가시나카마역", query: "Higashinakama Station", top: "40%", left: "52%", tag: "휴식", desc: "일정 중반 재충전을 위해 다시 들른 베이스캠프.", food: "로컬 라멘 맛집", hotel: "기타큐슈 비즈니스 스테이" },
+            { step: 9, name: "고노세야", query: "Konoseya Kitakyushu", top: "45%", left: "50%", tag: "숨은 스팟", desc: "현지인들만 아는 아기자기한 동네 산책 코스.", food: "수제 디저트 카페", hotel: "-" },
+            { step: 10, name: "히가시나카마역", query: "Higashinakama Station", top: "40%", left: "52%", tag: "휴식", desc: "일정 마무리 전 편안하게 휴식하는 숙소 인근.", food: "이자카야 꼬치구이", hotel: "기타큐슈 비즈니스 스테이" },
+            { step: 11, name: "구로사키", query: "Kurosaki Station Kitakyushu", top: "35%", left: "48%", tag: "경유", desc: "하카타로 돌아가는 길에 잠시 들르는 환승 포인트.", food: "-", hotel: "-" },
+            { step: 12, name: "하카타", query: "Hakata Station Fukuoka", top: "72%", left: "22%", tag: "마지막 밤", desc: "여행의 마지막 밤을 기념하는 하카타 포차 거리 산책.", food: "나카스 야타이 (포장마차 라멘)", hotel: "하카타 호텔" },
+            { step: 13, name: "후쿠오카 공항", query: "Fukuoka Airport", top: "78%", left: "18%", tag: "출국", desc: "알차게 즐기고 한국으로 돌아가는 공항 귀환 루트.", food: "면세점 쇼핑 리스트", hotel: "-" }
+        ];
+
+        let activeIndex = 0;
+
+        function renderApp() {
+            const cardList = document.getElementById('cardList');
+            const mapMarkers = document.getElementById('mapMarkers');
+            
+            cardList.innerHTML = '';
+            mapMarkers.innerHTML = '';
+
+            // 카드 리스트 및 지도 위 커스텀 마커 렌더링
+            travelData.forEach((item, idx) => {
+                // 사이드바 카드
+                const card = document.createElement('div');
+                card.className = `place-card ${idx === activeIndex ? 'active' : ''}`;
+                card.onclick = () => selectPlace(idx);
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div style="display: flex; align-items: center;">
+                            <div class="place-num">${item.step}</div>
+                            <div class="place-title">${item.name}</div>
+                        </div>
+                        <span class="place-tag">${item.tag}</span>
+                    </div>
+                    <div class="card-desc">${item.desc}</div>
+                    <div style="font-size: 11px; color: #64748b; margin-bottom: 8px;">
+                        🍽️ 맛집: <b>${item.food}</b><br>
+                        🏨 숙소: <b>${item.hotel}</b>
+                    </div>
+                    <div class="card-footer">
+                        <a href="https://maps.google.com/?q=${encodeURIComponent(item.name + ' 후쿠오카')}" target="_blank" class="btn btn-primary" onclick="event.stopPropagation()">📍 구글맵 보기</a>
+                        <button class="btn btn-outline" onclick="event.stopPropagation(); alert('${item.name} 정보가 복사되었습니다!');">📋 복사</button>
+                    </div>
+                `;
+                cardList.appendChild(card);
+
+                // 지도 위 번호 핀 마커
+                const pin = document.createElement('div');
+                pin.className = `custom-pin ${idx === activeIndex ? 'active' : ''}`;
+                pin.style.top = item.top;
+                pin.style.left = item.left;
+                pin.onclick = () => selectPlace(idx);
+                pin.innerHTML = `
+                    <div class="pin-number">${item.step}</div>
+                    <div class="pin-label">${item.name}</div>
+                `;
+                mapMarkers.appendChild(pin);
+            });
+        }
+
+        function selectPlace(idx) {
+            activeIndex = idx;
+            renderApp();
+            
+            // 클릭 시 해당 위치로 구글맵 줌인 연동
+            const item = travelData[idx];
+            const mapFrame = document.getElementById('mapFrame');
+            mapFrame.src = `https://maps.google.com/maps?q=${encodeURIComponent(item.query)}&t=m&z=14&output=embed`;
+
+            // 해당 카드로 스크롤
+            const cards = document.querySelectorAll('.place-card');
+            if (cards[idx]) {
+                cards[idx].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        renderApp();
+    </script>
+</body>
+</html>
