@@ -23,7 +23,6 @@
         
         .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
         .yt-btn { background: #fee2e2; color: #dc2626; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; z-index: 1000; }
-        .map-big-btn { background: #FF5A36; color: white; padding: 6px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; z-index: 1000; box-shadow: 0 2px 8px rgba(255, 90, 54, 0.3); }
         
         /* 메인 컨테이너 */
         .main-container { display: flex; flex: 1; position: relative; overflow: hidden; }
@@ -33,7 +32,7 @@
         .map-iframe { width: 100%; height: 100%; border: none; filter: saturate(1.1) contrast(1.05); }
         
         /* 장소 카드 사이드바 */
-        .sidebar { width: 420px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 50; box-shadow: -4px 0 20px rgba(0,0,0,0.05); }
+        .sidebar { width: 440px; background: white; border-left: 1px solid #e2e8f0; display: flex; flex-direction: column; z-index: 50; box-shadow: -4px 0 20px rgba(0,0,0,0.05); }
         .sidebar-header { padding: 16px; border-bottom: 1px solid #f1f5f9; background: #fff; }
         .sidebar-header h2 { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
         .sidebar-header p { font-size: 11px; color: #64748b; }
@@ -49,6 +48,7 @@
         .place-tag { font-size: 10px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #f1f5f9; color: #475569; flex-shrink: 0; }
         
         .card-desc { font-size: 11px; color: #475569; margin-bottom: 6px; line-height: 1.4; }
+        .info-box { font-size: 11px; color: #334155; margin-bottom: 8px; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid #f1f5f9; line-height: 1.5; }
         .card-footer { display: flex; gap: 6px; border-top: 1px solid #f1f5f9; padding-top: 6px; }
         .btn { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; text-decoration: none; cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 4px; }
         .btn-primary { background: #FF5A36; color: white; }
@@ -70,8 +70,7 @@
             <h1>후쿠오카 정보 총 정리</h1>
         </div>
         <div class="header-right">
-            <a href="https://maps.google.com/?q=Kitakyushu+Fukuoka" target="_blank" class="map-big-btn">🗺️ 전체지도</a>
-            <a href="https://www.youtube.com/@jo-ravel" target="_blank" class="yt-btn">✈️ 유튜브</a>
+            <a href="https://www.youtube.com/@jo-ravel" target="_blank" class="yt-btn">✈️ 조래블유튜브</a>
         </div>
     </header>
 
@@ -84,7 +83,7 @@
         <!-- 사이드바 카드 리스트 -->
         <div class="sidebar">
             <div class="sidebar-header">
-                <h2>🗺️ 조래블 추천 코스 & 맛집·숙소</h2>
+                <h2>🗺️ 조래블 영상에 나온 곳들</h2>
                 <p>카드를 누르면 해당 위치가 지도에 연동됩니다.</p>
             </div>
             <div class="card-list" id="cardList"></div>
@@ -93,19 +92,70 @@
 
     <script>
         const travelData = [
-            { step: 1, name: "후쿠오카 공항", query: "Fukuoka Airport", tag: "입국", desc: "여행의 시작점! 공항에서 지하철 타고 하카타로 빠르게 이동.", food: "-", hotel: "-" },
-            { step: 2, name: "하카타", query: "Hakata Station Fukuoka", tag: "숙소/맛집", desc: "첫날 숙소 체크인 및 모츠나베 로컬 맛집 탐방.", food: "하카타 모츠나베 오오야마", hotel: "THE BLOSSOM HAKATA" },
-            { step: 3, name: "구로사키", query: "Kurosaki Station Kitakyushu", tag: "경유/로컬", desc: "기타큐슈 깊숙한 로컬 감성을 느낄 수 있는 환승 거점.", food: "구로사키 야키토리 거리", hotel: "-" },
-            { step: 4, name: "히가시나카마역", query: "Higashinakama Station", tag: "베이스캠프", desc: "이번 일정의 핵심 거점! 조래블이 머문 아늑한 숙소 위치.", food: "역 앞 수제 돈카츠 전문점", hotel: "기타큐슈 비즈니스 스테이" },
-            { step: 5, name: "모지코역", query: "Mojiko Station", tag: "관광/명소", desc: "레트로한 건축물과 바닷가 풍경이 예술인 낭만 항구 도시.", food: "모지코 명물 야끼카레 (베어후르츠)", hotel: "-" },
-            { step: 6, name: "시모노세키", query: "Shimonoseki Station", tag: "맛집/시장", desc: "간몬 해협 건너서 즐기는 싱싱한 복어(후쿠) 요리와 가라토 시장.", food: "가라토 시장 초밥 세트", hotel: "-" },
-            { step: 7, name: "고쿠라", query: "Kokura Station Kitakyushu", tag: "쇼핑/성", desc: "고쿠라 성 산책 및 대형 쇼핑몰 리버워크 탐방.", food: "시로야 베이커리 (연유빵)", hotel: "-" },
-            { step: 8, name: "히가시나카마역", query: "Higashinakama Station", tag: "휴식", desc: "일정 중반 재충전을 위해 다시 들른 베이스캠프.", food: "로컬 라멘 맛집", hotel: "기타큐슈 비즈니스 스테이" },
-            { step: 9, name: "고노세야", query: "Konoseya Kitakyushu", tag: "숨은 스팟", desc: "현지인들만 아는 아기자기한 동네 산책 코스.", food: "수제 디저트 카페", hotel: "-" },
-            { step: 10, name: "히가시나카마역", query: "Higashinakama Station", tag: "휴식", desc: "일정 마무리 전 편안하게 휴식하는 숙소 인근.", food: "이자카야 꼬치구이", hotel: "기타큐슈 비즈니스 스테이" },
-            { step: 11, name: "구로사키", query: "Kurosaki Station Kitakyushu", tag: "경유", desc: "하카타로 돌아가는 길에 잠시 들르는 환승 포인트.", food: "-", hotel: "-" },
-            { step: 12, name: "하카타", query: "Hakata Station Fukuoka", tag: "마지막 밤", desc: "여행의 마지막 밤을 기념하는 하카타 포차 거리 산책.", food: "나카스 야타이 (포장마차 라멘)", hotel: "하카타 호텔" },
-            { step: 13, name: "후쿠오카 공항", query: "Fukuoka Airport", tag: "출국", desc: "알차게 즐기고 한국으로 돌아가는 공항 귀환 루트.", food: "면세점 쇼핑 리스트", hotel: "-" }
+            { 
+                step: 1, 
+                name: "후쿠오카 공항", 
+                query: "Fukuoka Airport", 
+                tag: "입국", 
+                desc: "여행의 시작점! 지하철을타고 하카타로 이동 국제선>국내선까지 무료셔틀이용", 
+                tip: "💡 팁: visa 및 카드에 와이파이 모양 컨택리스 카드로 후쿠오카 시내 전철 사용가능!"
+            },
+            { 
+                step: 2, 
+                name: "하카타 & 텐진", 
+                query: "Hakata Station Fukuoka", 
+                tag: "숙소/맛집", 
+                desc: "첫날 모츠나베 로컬 맛집 및 인기간식집 방문", 
+                detail: "<b>🍽️ 맛집:</b><br>1. 이모야킨지로 (고구마 간식)<br>2. 모츠나베 이치타카 하카타 본점 (대창나베)"
+            },
+            { 
+                step: 3, 
+                name: "히가시나카마역", 
+                query: "Higashinakama Station", 
+                tag: "베이스캠프", 
+                desc: "이번 일정의 핵심 거점! 조래블이 6박 17만원에 이용한 곳", 
+                detail: "<b>🍽️ 맛집:</b><br>1. 숙소근처 이자카야: くるくる 花娘<br>2. 하마스시: HAMA-SUSHI Nakama<br>3. 철판 스테이크: 豚ステーキ 十一 中間店<br><br><b>🏨 숙소:</b><br>HOTEL R9 The Yard 나카마<br><br><b>🛍️ 쇼핑:</b><br>1. GU Nakama (1~2만원대 패딩)<br>2. 하드오프: ハードオフ福岡中間店<br>3. 세컨스트리트: 2nd Street Nakama<br>4. 이온몰: Aeon Nakama Store<br>5. 메가 트라이얼: MegaCenterTRIAL NAKAMA (현금만 가능)<br>6. 세리아: Seria나카마 (모든게 100엔)<br>7. 다이소: DAISO Nakama-Iwase Store<br>8. 다이렉스: ダイレックス 中間店 (마트스시 끝판왕)<br><br><b>🏛️ 명소:</b><br>1. 모아이 스핑크스 돌하르방 (The Museum Without a Roof, 무료)<br>2. 치쿠호 전철 트램 히가시나카마 역"
+            },
+            { 
+                step: 4, 
+                name: "모지코역", 
+                query: "Mojiko Station", 
+                tag: "관광/명소", 
+                desc: "레트로한 건축물과 바닷가 풍경이 예술인 낭만 항구 도시.", 
+                detail: "<b>🍽️ 맛집 & 카페:</b><br>1. ukiwa 門司港 西海岸 (야끼카레 및 돈까스카레)<br>2. 프린세스 피피 (야끼카레 맛집)<br>3. 카페 리베르테: cafe liberté カフェ・リベルテ<br><br><b>🏛️ 명소:</b><br>1. 칸몬해협 뮤지엄 (무료 전망대)<br>2. 칸몬연락선 모지항 승선장 (페리)<br>3. 모지코 레트로 門司港レトロ"
+            },
+            { 
+                step: 5, 
+                name: "시모노세키", 
+                query: "Shimonoseki Station", 
+                tag: "맛집/시장", 
+                desc: "간몬 해협 건너서 즐기는 싱싱한 복어와 가라토 시장 스시.", 
+                detail: "<b>🍽️ 맛집:</b><br>1. 가라토 시장 (바다뷰 스시)<br>2. 조래블 픽 가츠동 1위: 五宝<br><br><b>🏛️ 명소:</b><br>1. 하이! 카랏토요코쵸 (놀이공원)<br>2. 카이쿄칸 (돌고래쇼 아쿠아리움)<br>3. 아카마신궁 (오션뷰 신사)"
+            },
+            { 
+                step: 6, 
+                name: "고쿠라", 
+                query: "Kokura Station Kitakyushu", 
+                tag: "쇼핑/성", 
+                desc: "고쿠라 성 산책 및 대형 쇼핑몰 리버워크 탐방.", 
+                detail: "<b>🍽️ 맛집:</b><br>1. 손석구 타코야끼: Takochan kokura<br><br><b>🏛️ 명소 & 쇼핑:</b><br>1. 고쿠라성 & 등불축제<br>2. 아뮤플라자 고쿠라 (쇼핑몰)"
+            },
+            { 
+                step: 7, 
+                name: "고야노세역", 
+                query: "Koyanose Station", 
+                tag: "숨은 스팟", 
+                desc: "다양한 신사와 로컬 맛집이 가득한 고야노세 슈쿠.", 
+                detail: "<b>🍽️ 맛집 & 카페:</b><br>1. 킷쇼안 (돈까스덮밥 & 오뎅맛집: 吉祥庵)<br>2. 카페88 (팥죽 서비스 주신 카페: cafe88)<br>3. 하니미엘 (과일케이크 맛집: ハニーミエル)<br><br><b>🏛️ 명소:</b><br>1. 신사거리 (Nagasaki Kaido Koyanose Shuku)"
+            },
+            { 
+                step: 8, 
+                name: "하카타 > 후쿠오카공항", 
+                query: "Fukuoka Airport International Terminal", 
+                tag: "출국", 
+                desc: "알차게 즐기고 한국으로 돌아가는 공항 귀환 루트.", 
+                detail: "<b>🚌 버스 정류장:</b><br>후쿠오카국제공항행 버스정류장 (福岡空港国際線のりば・おりば)"
+            }
         ];
 
         let activeIndex = 0;
@@ -118,6 +168,15 @@
                 const card = document.createElement('div');
                 card.className = `place-card ${idx === activeIndex ? 'active' : ''}`;
                 card.onclick = () => selectPlace(idx);
+                
+                let extraContent = '';
+                if (item.tip) {
+                    extraContent += `<div style="font-size: 11px; color: #0284c7; margin-bottom: 6px; background: #e0f2fe; padding: 6px; border-radius: 6px;">${item.tip}</div>`;
+                }
+                if (item.detail) {
+                    extraContent += `<div class="info-box">${item.detail}</div>`;
+                }
+
                 card.innerHTML = `
                     <div class="card-top">
                         <div style="display: flex; align-items: center; min-width:0; flex:1;">
@@ -127,10 +186,7 @@
                         <span class="place-tag">${item.tag}</span>
                     </div>
                     <div class="card-desc">${item.desc}</div>
-                    <div style="font-size: 11px; color: #64748b; margin-bottom: 6px;">
-                        🍽️ 맛집: <b>${item.food}</b><br>
-                        🏨 숙소: <b>${item.hotel}</b>
-                    </div>
+                    ${extraContent}
                     <div class="card-footer">
                         <a href="https://maps.google.com/?q=${encodeURIComponent(item.name + ' 후쿠오카')}" target="_blank" class="btn btn-primary" onclick="event.stopPropagation()">📍 구글맵 보기</a>
                     </div>
